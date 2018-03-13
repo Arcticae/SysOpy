@@ -5,7 +5,11 @@
 #ifndef PROJECT_LIBRARY_H
 #define PROJECT_LIBRARY_H
 
-
+struct array_blocks{
+    char** array;
+    int block_number;
+    int is_static;
+};
 
 
 

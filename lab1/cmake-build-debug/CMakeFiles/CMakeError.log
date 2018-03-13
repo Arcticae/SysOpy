@@ -1,0 +1,73 @@
+Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
+Compiler: /usr/bin/cc 
+Build flags: 
+Id flags:  
+
+The output was:
+1
+/usr/bin/ld: cannot find crt1.o: Nie ma takiego pliku ani katalogu
+/usr/bin/ld: cannot find crti.o: Nie ma takiego pliku ani katalogu
+/usr/bin/ld: cannot find -lc
+/usr/bin/ld: cannot find crtn.o: Nie ma takiego pliku ani katalogu
+collect2: error: ld returned 1 exit status
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: CMAKE_CXX_COMPILER-NOTFOUND 
+Build flags: 
+Id flags:  
+
+The output was:
+No such file or directory
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: CMAKE_CXX_COMPILER-NOTFOUND 
+Build flags: 
+Id flags: -c 
+
+The output was:
+No such file or directory
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: CMAKE_CXX_COMPILER-NOTFOUND 
+Build flags: 
+Id flags:  
+
+The output was:
+No such file or directory
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: CMAKE_CXX_COMPILER-NOTFOUND 
+Build flags: 
+Id flags: -c 
+
+The output was:
+No such file or directory
+
+
+Determining if the C compiler works failed with the following output:
+Change Dir: /home/timelock/Dokumenty/SysOpy/lab1/cmake-build-debug/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_c0c69/fast"
+/usr/bin/make -f CMakeFiles/cmTC_c0c69.dir/build.make CMakeFiles/cmTC_c0c69.dir/build
+make[1]: Wejście do katalogu '/home/timelock/Dokumenty/SysOpy/lab1/cmake-build-debug/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_c0c69.dir/testCCompiler.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_c0c69.dir/testCCompiler.c.o   -c /home/timelock/Dokumenty/SysOpy/lab1/cmake-build-debug/CMakeFiles/CMakeTmp/testCCompiler.c
+Linking C executable cmTC_c0c69
+/home/timelock/Pulpit/clion-2017.3.4/bin/cmake/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c0c69.dir/link.txt --verbose=1
+/usr/bin/cc      -rdynamic CMakeFiles/cmTC_c0c69.dir/testCCompiler.c.o  -o cmTC_c0c69 
+/usr/bin/ld: cannot find crt1.o: Nie ma takiego pliku ani katalogu
+/usr/bin/ld: cannot find crti.o: Nie ma takiego pliku ani katalogu
+/usr/bin/ld: cannot find -lc
+/usr/bin/ld: cannot find crtn.o: Nie ma takiego pliku ani katalogu
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_c0c69.dir/build.make:97: polecenia dla obiektu 'cmTC_c0c69' nie powiodły się
+make[1]: *** [cmTC_c0c69] Błąd 1
+make[1]: Opuszczenie katalogu '/home/timelock/Dokumenty/SysOpy/lab1/cmake-build-debug/CMakeFiles/CMakeTmp'
+Makefile:126: polecenia dla obiektu 'cmTC_c0c69/fast' nie powiodły się
+make: *** [cmTC_c0c69/fast] Błąd 2
+
+

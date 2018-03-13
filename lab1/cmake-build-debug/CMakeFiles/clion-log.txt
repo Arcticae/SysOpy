@@ -1,1 +1,80 @@
-CMakeLists.txt not found in /home/timelock/Dokumenty/SysOpy/lab1
+/home/timelock/Pulpit/clion-2017.3.4/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/timelock/Dokumenty/SysOpy/lab1
+-- The C compiler identification is GNU 5.4.0
+-- The CXX compiler identification is unknown
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- broken
+CMake Error at /home/timelock/Pulpit/clion-2017.3.4/bin/cmake/share/cmake-3.9/Modules/CMakeTestCCompiler.cmake:51 (message):
+  The C compiler "/usr/bin/cc" is not able to compile a simple test program.
+
+  It fails with the following output:
+
+   Change Dir: /home/timelock/Dokumenty/SysOpy/lab1/cmake-build-debug/CMakeFiles/CMakeTmp
+
+  
+
+  Run Build Command:"/usr/bin/make" "cmTC_c0c69/fast"
+
+  /usr/bin/make -f CMakeFiles/cmTC_c0c69.dir/build.make
+  CMakeFiles/cmTC_c0c69.dir/build
+
+  make[1]: Wejście do katalogu
+  '/home/timelock/Dokumenty/SysOpy/lab1/cmake-build-debug/CMakeFiles/CMakeTmp'
+
+
+  Building C object CMakeFiles/cmTC_c0c69.dir/testCCompiler.c.o
+
+  /usr/bin/cc -o CMakeFiles/cmTC_c0c69.dir/testCCompiler.c.o -c
+  /home/timelock/Dokumenty/SysOpy/lab1/cmake-build-debug/CMakeFiles/CMakeTmp/testCCompiler.c
+
+
+  Linking C executable cmTC_c0c69
+
+  /home/timelock/Pulpit/clion-2017.3.4/bin/cmake/bin/cmake -E
+  cmake_link_script CMakeFiles/cmTC_c0c69.dir/link.txt --verbose=1
+
+  /usr/bin/cc -rdynamic CMakeFiles/cmTC_c0c69.dir/testCCompiler.c.o -o
+  cmTC_c0c69
+
+  /usr/bin/ld: cannot find crt1.o: Nie ma takiego pliku ani katalogu
+
+  /usr/bin/ld: cannot find crti.o: Nie ma takiego pliku ani katalogu
+
+  /usr/bin/ld: cannot find -lc
+
+  /usr/bin/ld: cannot find crtn.o: Nie ma takiego pliku ani katalogu
+
+  collect2: error: ld returned 1 exit status
+
+  CMakeFiles/cmTC_c0c69.dir/build.make:97: polecenia dla obiektu 'cmTC_c0c69'
+  nie powiodły się
+
+  make[1]: *** [cmTC_c0c69] Błąd 1
+
+  make[1]: Opuszczenie katalogu
+  '/home/timelock/Dokumenty/SysOpy/lab1/cmake-build-debug/CMakeFiles/CMakeTmp'
+
+
+  Makefile:126: polecenia dla obiektu 'cmTC_c0c69/fast' nie powiodły się
+
+  make: *** [cmTC_c0c69/fast] Błąd 2
+
+  
+
+  
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt
+
+
+CMake Error in CMakeLists.txt:
+  No CMAKE_CXX_COMPILER could be found.
+
+  Tell CMake where to find the compiler by setting either the environment
+  variable "CXX" or the CMake cache entry CMAKE_CXX_COMPILER to the full path
+  to the compiler, or to the compiler name if it is in the PATH.
+
+
+-- Configuring incomplete, errors occurred!
+See also "/home/timelock/Dokumenty/SysOpy/lab1/cmake-build-debug/CMakeFiles/CMakeOutput.log".
+See also "/home/timelock/Dokumenty/SysOpy/lab1/cmake-build-debug/CMakeFiles/CMakeError.log".

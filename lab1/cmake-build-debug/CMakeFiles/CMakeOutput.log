@@ -1,0 +1,14 @@
+The system is: Linux - 4.10.0-38-generic - x86_64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /usr/bin/cc 
+Build flags: 
+Id flags: -c 
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
+
+The C compiler identification is GNU, found in "/home/timelock/Dokumenty/SysOpy/lab1/cmake-build-debug/CMakeFiles/3.9.6/CompilerIdC/CMakeCCompilerId.o"
+
