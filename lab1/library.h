@@ -11,6 +11,15 @@ struct array_blocks{
     int is_static;
 };
 
+struct array_blocks* create_array(int blocks,int is_static);
+
+void delete_array(struct array_blocks*array);
+
+void delete_block_at(struct array_blocks*array,int index);
+
+void add_block_at(struct array_blocks*array,int index.char*blk);
+
+char* get_nearest_block_bysum(struct array_blocks*array,int blocknumber);
 
 
 
