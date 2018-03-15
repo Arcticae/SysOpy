@@ -6,15 +6,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
-char*static_array[1000000];
+char* static_array[1000000];
 
 struct array_blocks* create_array(int blocks,int is_static) { //static=0 for dynamic array, static =1 for static array allocation
 
     if(blocks<=0)return NULL;
 
-    array_blocks* new_array= malloc(sizeof(array_blocks));
-    new_array->block_number=blocks-1;       //because of indexing
+    struct array_blocks* new_array= malloc(sizeof(struct array_blocks));
+    new_array->block_number=blocks;
 
     if(is_static) {
         new_array->is_static=1;      //will be important when writing other functions
@@ -24,7 +25,6 @@ struct array_blocks* create_array(int blocks,int is_static) { //static=0 for dyn
         new_array->is_static=0;
         new_array->array=(char**)malloc(blocks*sizeof(char*));
     }
-
 
 
     return new_array;
@@ -42,16 +42,15 @@ void delete_array(struct array_blocks*array) {
 }
 
 void delete_block_at(struct array_blocks*array,int index){
-    if(array->block_number<index || array == NULL)return;
-    if(array->array[index]!=NULL) {
+    if(array == NULL || array->block_number<index || array->array[index]==NULL)return;
         free(array->array[index]);
         array->array[index]=NULL;
-    }
+
 }
 
-void add_block_at(struct array_blocks*array,int index.char*blk){
+void add_block_at(struct array_blocks*array,int index,char*blk){
 
-    if(array==NULL || array->array_blocks<index || index < 0) return;
+    if(array==NULL || array->block_number<index || index < 0) return;
 
     array->array[index]=(char*)malloc(sizeof(char)*strlen(blk));
     strcpy(array->array[index],blk);
@@ -71,21 +70,21 @@ int get_block_value(char*blk){
 
 char* get_nearest_block_bysum(struct array_blocks*array,int blocknumber){
 
-    if(array== null || blocknumber<0 || blocknumber>array->block_number){
-        return null;
+    if(array== NULL || blocknumber<0 || blocknumber>array->block_number){
+        return NULL;
     }
 
     int blocknumber_sum=get_block_value(array->array[blocknumber]);
     int i;
-    int minimum=MAX_INT;
-    char*nearest;
+    int minimum=INT32_MAX;
+    char*nearest=NULL;
 
     for(i=0;i<array->block_number;i++)
     {
         char*tmp=array->array[i];
 
         int current=abs(get_block_value(tmp)-blocknumber_sum);
-        if(current < minimum) {
+        if(current < minimum && blocknumber!=i) {
             nearest=tmp;
             minimum=current;
         }
