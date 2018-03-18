@@ -1,6 +1,7 @@
 //
 // Created by timelock on 13.03.18.
 //
+#include <dlfcn.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -10,6 +11,12 @@
 #include <unistd.h>
 #include <sys/resource.h>
 #include "library.h"
+
+
+
+void*dl_handle;
+
+
 
 char* get_random_block(int length){
     if(length<1)return NULL;
@@ -33,7 +40,8 @@ void randomize_array(struct array_blocks* array, int width){
     int i;
     for(i=0;i<array->block_number;i++) {
         char*block=get_random_block(width);
-        add_block_at(array,i,block);
+        void(*fadd_block_at)()=dlsym(dl_handle,"add_block_at");
+        fadd_block_at(array,i,block);
     }
 }
 void add_n_blocks(struct array_blocks*array, int n,int width){
@@ -42,7 +50,8 @@ void add_n_blocks(struct array_blocks*array, int n,int width){
     int i;
     for(i=0;i<n;i++){
         char*random_blk=get_random_block(width);
-        add_block_at(array,i,random_blk);
+        void(*fadd_block_at)()=dlsym(dl_handle,"add_block_at");
+        fadd_block_at(array,i,random_blk);
     }
 }
 
@@ -51,7 +60,8 @@ void delete_n_blocks(struct array_blocks* array,int n){
     if(n-1>array->block_number)return;
     int i;
     for(i=0;i<n;i++){
-        delete_block_at(array,i);
+        void(*fdelete_block_at)()=dlsym(dl_handle,"delete_block_at");
+        fdelete_block_at(array,i);
     }
 }
 
@@ -60,37 +70,57 @@ void add_and_delete_n_blocks(struct array_blocks*array,int n,int width){
     add_n_blocks(array,n,width);
     delete_n_blocks(array,n);
 }
+void print_array(struct array_blocks* array)
+{
+    int i;
+    for(i=0;i<array->block_number;i++){
 
+
+        if(array->array[i]!=NULL)
+            printf("%s\n",array->array[i]);
+        else printf("NULL\n");
+    }
+    printf("\n");
+}
 void do_stuff(char*operation,int n,int block_width,struct array_blocks*array){
 
     if(strcmp(operation,"search_element")==0){
-        get_nearest_block_bysum(array,n);
+        void(*fget_nearest_block_bysum)()=dlsym(dl_handle,"get_nearest_block_bysum");
+        fget_nearest_block_bysum(array,n);
 
     }
     if(strcmp(operation,"remove")==0){
+
         delete_n_blocks(array,n);
     }
     if(strcmp(operation,"add")==0){
+
         add_n_blocks(array,n,block_width);
     }
     if(strcmp(operation,"remove_and_add")==0){
+
         add_and_delete_n_blocks(array,n,block_width);
     }
 }
 
 int main(int argc,char**argv)
 {
-   if(argc<4){
+    dl_handle = dlopen("./libBlocks.so", RTLD_LAZY);
+    if (!dl_handle) {
+        printf("Library cannot be opened %s\n", dlerror());
+        return 1;
+    }
+    if(argc<4){
         printf("Please give the program proper number of arguments. \n"
-               "(1) Mode of allocation - 1 for static 0 for dynamic.\n"
-               "(2) Blocksize - in range of integer.\n"
-               "(3) Number of blocks available in the array.\n"
-               "(4) Optional 2 commands from the list as given : search_element <arg> , remove <arg> , add <arg> , remove_and_add <arg>");
-            return 1;
+                       "(1) Mode of allocation - 1 for static 0 for dynamic.\n"
+                       "(2) Blocksize - in range of integer.\n"
+                       "(3) Number of blocks available in the array.\n"
+                       "(4) Optional 2 commands from the list as given : search_element <arg> , remove <arg> , add <arg> , remove_and_add <arg>");
+        return 1;
     }
     srand((unsigned int)time(NULL));
 
-    int is_static=(int)strtol(argv[1],NULL,10);    //no strtoi in stdlib.h?
+    int is_static=(int)strtol(argv[1],NULL,10);
     int blocksize=(int)strtol(argv[2],NULL,10);
     int blocknumber=(int)strtol(argv[3],NULL,10);
 
@@ -136,8 +166,8 @@ int main(int argc,char**argv)
     //start measure
     gettimeofday(real_times[0],NULL);
     getrusage(RUSAGE_SELF,before);
-
-    array=create_array(blocknumber,is_static);
+    struct array_blocks*(*fcreate_array)()=dlsym(dl_handle,"create_array");
+    array=fcreate_array(blocknumber,is_static);
     randomize_array(array,blocksize);
 
 
@@ -203,6 +233,8 @@ int main(int argc,char**argv)
 
 
     }
-    delete_array(array);
+    void(*fdelete_array)()=dlsym(dl_handle,"delete_array");
+    fdelete_array(array);
 
 }
+
