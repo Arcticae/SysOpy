@@ -1,0 +1,69 @@
+--4 BLOCK SIZE 
+-LIB
+Invoking operation sort with arguments: 
+10000 of entries
+4 buffer size (B)
+Realtime: 6.242476s
+System Time: 2.808000s
+User Time: 2.944000s
+-SYS
+Invoking operation sort with arguments: 
+10000 of entries
+4 buffer size (B)
+Realtime: 18.15699s
+System Time: 15.692000s
+User Time: 2.220000s
+
+--512 BLOCK SIZE
+-LIB
+Invoking operation sort with arguments: 
+10000 of entries
+512 buffer size (B)
+Realtime: 14.441764s
+System Time: 8.280000s
+User Time: 5.176000s
+-SYS
+Invoking operation sort with arguments: 
+10000 of entries
+512 buffer size (B)
+Realtime: 24.514451s
+System Time: 20.496000s
+User Time: 2.784000s
+
+--4096 BLOCK SIZE
+-LIB
+Invoking operation sort with arguments: 
+10000 of entries
+4096 buffer size (B)
+Realtime: 68.009637s
+System Time: 54.216000s
+User Time: 13.032000s
+-SYS
+Invoking operation sort with arguments: 
+10000 of entries
+4096 buffer size (B)
+Realtime: 74.022076s
+System Time: 69.524000s
+User Time: 3.192000s
+
+--8192 BLOCK SIZE
+-LIB
+Invoking operation sort with arguments: 
+10000 of entries
+8192 buffer size (B)
+Realtime: 206.470726s
+System Time: 173.016000s
+User Time: 26.200000s
+-SYS
+Invoking operation sort with arguments: 
+10000 of entries
+8192 buffer size (B)
+Realtime: 181.017381s
+System Time: 167.384000s
+User Time: 4.868000s
+
+
+the bigger the block size, the discrepancy betweeen sortings dwindles,
+thus making the system sort more efficient when using bigger blocks in the memory
+to copy data.
+
