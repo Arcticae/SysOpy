@@ -57,7 +57,6 @@ time_t compare_days(time_t mod_time,time_t given_date){
 void show_file(const char*file_path,const struct stat*file_stats){
 
     printf(" %lld\t", file_stats->st_size);//todo
-    printf((S_ISDIR(file_stats->st_mode)) ? "d" : "-");
     printf((file_stats->st_mode & S_IRUSR) ? "r" : "-");
     printf((file_stats->st_mode & S_IWUSR) ? "w" : "-");
     printf((file_stats->st_mode & S_IXUSR) ? "x" : "-");
@@ -75,7 +74,7 @@ void show_file(const char*file_path,const struct stat*file_stats){
     printf("\n");
 
 }
-void manual_display(char*path,char*operand,time_t given_time){//to check !!//todo
+void manual_display(char*path,char*operand,time_t given_time){
 
 
         if(path==NULL){
@@ -102,22 +101,25 @@ void manual_display(char*path,char*operand,time_t given_time){//to check !!//tod
 
             stat(element_path,&file_stats);
 
-            if(strcmp(dir_entry->d_name,".")!=0 && strcmp(dir_entry->d_name,"..")!=0 && S_ISREG(file_stats.st_mode))
+            if(strcmp(dir_entry->d_name,".")!=0 && strcmp(dir_entry->d_name,"..")!=0 )
             {
-
-                if(strcmp(operand,"=")==0 && compare_days(file_stats.st_mtim.tv_sec,given_time)==0){
-                    show_file(element_path,&file_stats);
-                }
-                if(strcmp(operand,">")==0 && compare_days(file_stats.st_mtim.tv_sec,given_time)>0){
-                    show_file(element_path,&file_stats);
-                }
-                if(strcmp(operand,"<")==0 && compare_days(file_stats.st_mtim.tv_sec,given_time)<0){
-                    show_file(element_path,&file_stats);
-                }
+                    if(S_ISREG(file_stats.st_mode)){
+                        if (strcmp(operand, "=") == 0 && compare_days(file_stats.st_mtim.tv_sec, given_time) == 0) {
+                            show_file(element_path, &file_stats);
+                        }
+                        if (strcmp(operand, ">") == 0 && compare_days(file_stats.st_mtim.tv_sec, given_time) > 0) {
+                            show_file(element_path, &file_stats);
+                        }
+                        if (strcmp(operand, "<") == 0 && compare_days(file_stats.st_mtim.tv_sec, given_time) < 0) {
+                            show_file(element_path, &file_stats);
+                        }
+                    }
                 if(S_ISDIR(file_stats.st_mode)){
                     manual_display(element_path,operand,given_time);
                 }
+
             }
+
 
             dir_entry=readdir(current_dir);
 
@@ -152,7 +154,7 @@ int nftw_show(const char*path,const struct stat* file_stats,int typeflag,struct 
 int main(int argc,char**argv){
 
     tmp_time=time(NULL);
-    manual_display(realpath("/home/timelock/Pobrane",NULL),"<",tmp_time);
+    manual_display(realpath("..",NULL),"<",tmp_time);
     printf("\n");
     tmp_operand="<";
     nftw(realpath("/home/timelock/Pobrane",NULL),nftw_show,10,FTW_PHYS);    //dziawa hihi
