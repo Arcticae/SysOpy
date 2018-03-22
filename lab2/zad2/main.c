@@ -1,67 +1,34 @@
 //
 // Created by timelock on 21.03.18.
+//
 #define __USE_XOPEN
 #define _XOPEN_SOURCE 500
 #define _GNU_SOURCE
 #define NFTW_MODE 11
 #define MANUAL_MODE 22
 
-#include <limits.h>
+
 #include <time.h>
 #include <sys/stat.h>
-#include <sys/times.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ftw.h>
-#
-const char format[] = "%Y-%m-%d %H:%M:%S";
 
+const char format[] = "%Y-%m-%d %H:%M:%S";
 char*tmp_operand;
 time_t tmp_time;
+
 time_t compare_days(time_t mod_time,time_t given_date){
     return (time_t) mod_time-given_date;
-/*
-    struct tm*modtime=localtime(&mod_time);
-    struct tm*giventime=localtime(&given_date);
-    struct tm*resulttime=malloc(sizeof(struct tm));
 
-
-
-
-
-    resulttime->tm_year=modtime->tm_year-giventime->tm_year;
-    resulttime->tm_mon=modtime->tm_mon-giventime->tm_mon;
-    resulttime->tm_mday=modtime->tm_mday-giventime->tm_mday;
-
-    char temptime[20];
-    strftime(temptime,20 , format, modtime);
-    printf("%s\n",temptime);
-
-    strftime(temptime,20 , format, giventime);
-    printf("%s\n",temptime);
-
-    strftime(temptime,20 , format, resulttime);
-    printf("%s\n",temptime);
-
-    if(resulttime->tm_year==0 && resulttime->tm_mon==0 && resulttime->tm_mday==0){
-        return 0;
-    }
-    if(resulttime->tm_year>0 || resulttime->tm_year==0)
-    {
-        if(resulttime->tm_mon>0 || resulttime->tm_mon==0)
-        {
-            if(resulttime->tm_mday>0)return 1;
-        }
-    }
-    free(resulttime);
-    return -1; */
 }
+
 void show_file(const char*file_path,const struct stat*file_stats){
     if(S_ISREG(file_stats->st_mode))
     {
-        printf(" %lld\t", file_stats->st_size);//todo
+        printf(" %lld\t", file_stats->st_size);
         printf((file_stats->st_mode & S_IRUSR) ? "r" : "-");
         printf((file_stats->st_mode & S_IWUSR) ? "w" : "-");
         printf((file_stats->st_mode & S_IXUSR) ? "x" : "-");
@@ -180,10 +147,17 @@ void view_choice(const char*path,char*operand,char*given_time,int mode){
 
 int main(int argc,char**argv){
 
+    //view_choice("../","<","2018-03-21 16:34:23",NFTW_MODE);//example use
 
-
-    //view_choice("../","<","2018-03-21 16:34:23",MANUAL_MODE);//example use
-    printf("\n\n\n");
-    view_choice("../","<","2018-03-21 16:34:23",NFTW_MODE);//example use
+    if(argc<5){
+        printf("Wrong number of args, give me 5 like : path,operand,Year-Month-Day Hr:Min:Sec,NFTW_MODE/MANUAL_MODE\n");
+        return -1;
+    }
+    if(strcmp(argv[4],"NFTW_MODE")==0)view_choice(argv[1],argv[2],argv[3],NFTW_MODE);
+    if(strcmp(argv[4],"MANUAL_MODE")==0)view_choice(argv[1],argv[2],argv[3],MANUAL_MODE);
+    else{
+        printf("Wrong format, choose between NFTW_MODE, MANUAL_MODE\n");
+        return -1;
+    }
     return 0;
 }

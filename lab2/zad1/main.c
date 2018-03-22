@@ -387,6 +387,7 @@ int main(int argc,char**argv){
             gettimeofday(real_times[1],NULL);
             getrusage(RUSAGE_SELF,after);
         }
+
         else {
             printf("Wrong mode-type chosen. choose \"LIB_MODE\" or \"SYS_MODE\" as an argument to operation\n");
             return -1;
@@ -400,9 +401,9 @@ int main(int argc,char**argv){
     user_times[1]=after->ru_utime;
 
     if(strcmp(argv[1],"copy")==0){
-        printf("\nInvoking operation %s with arguments: \n%d of entries\nwhich are %d characters long",argv[1],(int)strtol(argv[4],NULL,10),(int)strtol(argv[5],NULL,10));
+        printf("\nInvoking operation %s with arguments: \n%d of entries\n%d buffer size (B)",argv[1],(int)strtol(argv[4],NULL,10),(int)strtol(argv[5],NULL,10));
     }else{
-        printf("\nInvoking operation %s with arguments: \n%d of entries\nwhich are %d characters long",argv[1],(int)strtol(argv[3],NULL,10),(int)strtol(argv[4],NULL,10));
+        printf("\nInvoking operation %s with arguments: \n%d of entries\n%d buffer size (B)",argv[1],(int)strtol(argv[3],NULL,10),(int)strtol(argv[4],NULL,10));
     }
 
     printf("\nInvoking operation %s with arguments\n",argv[1]);
