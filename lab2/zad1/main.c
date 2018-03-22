@@ -272,13 +272,5 @@ void sort_join(char*source,int record_amount,int record_length,int mode){
 int main() {
 
 
-    generate("../test1.txt",3,5);
-    generate("../test2.txt",3,5);
-    generate("../test3.txt",0,0);
-    copy_join("../test1.txt","../test2.txt",3,5,LIB_MODE);
-    copy_join("../test1.txt","../test3.txt",3,5,SYS_MODE);
-    sort_join("../test1.txt",3,5,LIB_MODE);
-    sort_join("../test2.txt",3,5,SYS_MODE);
-
     return 0;
 }
