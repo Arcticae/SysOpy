@@ -1,5 +1,7 @@
 echo hello
 echo FUCK
 echo YOU
-./return_neg.c
+./mem_exceed
+./time_exceed
+./return_neg
 echo chujciwdupenicniewypisze
