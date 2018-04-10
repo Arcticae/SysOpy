@@ -3,15 +3,22 @@
 //
 
 #include <stdlib.h>
+#include <stdio.h>
 
 int main(){
-    int size=1000000000;
-    int i;
-    char*table=malloc(size*sizeof(char));
-    for(i=0;i<size;i++){
-        table[i]='a';
+    long int size=1024*1024*10;
+    int i,j;
+    char *table=NULL;
+    for(i=1;i<10;i++) {
+        table = calloc((size_t) size*i, sizeof(char));
+        printf("Allocated %ldMiB of memory\n", i*size / (1024 * 1024));
+
+        for (j = 0; j < size; j++) {
+            table[j] = 'a';
+        }
+        free(table);
     }
-    free(table);
+
 
     return 0;
 }

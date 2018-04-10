@@ -1,7 +1,7 @@
-echo hello
-echo FUCK
-echo YOU
+echo what
+echo is
+echo up
 ./mem_exceed
 ./time_exceed
 ./return_neg
-echo chujciwdupenicniewypisze
+echo wonsayanyting

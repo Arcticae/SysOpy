@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <sys/resource.h>
 #include <sys/time.h>
+#include <errno.h>
 
 #define max_length 100
 #define max_argnum 20
@@ -18,11 +19,21 @@ int set_limits(char*cpu,char*mem){
     struct rlimit mem_limit;
     struct rlimit cpu_limit;
 
-    cpu_limit.rlim_max,cpu_limit.rlim_cur=(unsigned int)strtol(cpu,NULL,10);
-    mem_limit.rlim_max,mem_limit.rlim_cur=(unsigned int)strtol(mem,NULL,10)*1024*1024; //in MiB
+    cpu_limit.rlim_max=(rlim_t)strtol(cpu,NULL,10);
+    cpu_limit.rlim_cur=(rlim_t)strtol(cpu,NULL,10);
+    mem_limit.rlim_max=(rlim_t)strtol(mem,NULL,10)*1024*1024; //given in MiB
+    mem_limit.rlim_cur=(rlim_t)strtol(mem,NULL,10)*1024*1024;
+    if(setrlimit(RLIMIT_CPU,&cpu_limit)!=0) //cpu mem
+    {
+        printf("Could not set given cpu limits, reason:  %s\n",strerror(errno));
+        return -1;
+    }
 
-    if(setrlimit(RLIMIT_CPU,&cpu_limit)!=0)return -1;
-    if(setrlimit(RLIMIT_AS,&mem_limit)!=0)return -1;
+    if(setrlimit(RLIMIT_AS,&mem_limit)!=0)
+    {
+        printf("Could not set given memory limits, reason:  %s\n",strerror(errno));
+        return -1;
+    }
 
     return 0;
 
@@ -43,7 +54,8 @@ int main(int argc, char**argv){
 
     char*arguments[max_argnum];
     char line[max_length];
-    int argnum,status;
+    int argnum;
+    int status;
     struct rusage rusage_before,rusage_after;
 
     while(fgets(line,max_length,batch_file)){
@@ -67,12 +79,7 @@ int main(int argc, char**argv){
         pid_t child_pid=fork();
 
         if(child_pid==0){
-
-            if(!set_limits(argv[2],argv[3])) {
-                printf("Could not set given limits, please try agen\n");
-                return -1;
-            }
-
+            if(set_limits(argv[2],argv[3])<0)return -1;
             execvp(arguments[0],arguments);
             exit(1);                       //the code below will not be executed if the process does exec properly
         }
@@ -85,8 +92,7 @@ int main(int argc, char**argv){
         wait(&status);
         getrusage(RUSAGE_CHILDREN,&rusage_after);
 
-        if(status!=0){
-
+        if(WIFEXITED(status)==0){
             printf("The process: %s returned code %d, the task will now terminate.\n",arguments[0],status);
             return -1;
         }
