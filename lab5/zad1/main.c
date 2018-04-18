@@ -95,8 +95,8 @@ int main(int argc, char**argv){
     }
     char line[maxline_len];
 
-    while(fgets(line,maxline_len,batch_file)){
-        fprintf(stderr,"\tDEBUG: %s\n",line);
+    while(fgets(line,maxline_len,batch_file)!=NULL){
+        fprintf(stderr,"\tDEBUG: %s PID: %d\n",line,getpid());
         int status=0;
         pid_t pid;
         pid=fork();
@@ -105,7 +105,7 @@ int main(int argc, char**argv){
             handle_oneliner(line);      //execution
             exit(EXIT_SUCCESS);
         }
-
+        sleep(1);
         wait(&status);
         if(status){
             printf("Error!\nLine %s cannot be executed!\n",line);
