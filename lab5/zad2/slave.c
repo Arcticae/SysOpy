@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <limits.h>
+#include <fcntl.h>
+#include <string.h>
 
 #define date_size 33
 
@@ -14,8 +16,8 @@ int main(int argc, char**argv){
         printf("Wrong arguments given to the program, please try agen\n");
         exit(EXIT_FAILURE);
     }
-    FILE*fifoptr=fopen(argv[1],"w");
-    if(fifoptr==NULL){
+    int fifoptr=open(argv[1],O_WRONLY);
+    if(fifoptr<0){
         perror("Problem with opening fifo file");
         exit(EXIT_SUCCESS);
     }
@@ -39,9 +41,9 @@ int main(int argc, char**argv){
         fgets(date_buffer,date_size,date_pipe);
         fclose(date_pipe);
         sprintf(pipe_output,"My pid is %d and my time is %s\n",getpid(),date_buffer);
-        fputs(pipe_output,fifoptr);
+        write(fifoptr,pipe_output,strlen(pipe_output));
         sleep((unsigned int) (rand() % 6 + 1));
     }
-    fclose(fifoptr);
+    close(fifoptr);
     return 0;
 }

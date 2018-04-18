@@ -28,7 +28,7 @@ int main(int argc, char**argv){
     char buffer[PIPE_BUF];
     int amount=0;
     while(fgets(buffer,PIPE_BUF,fifoptr)){
-        printf("Master: I got a date from somebodyy <3\n%s",buffer);
+        printf("Master: I have received a buffer from slave\n%s",buffer);
         amount++;
     }
     fprintf(stderr,"Master got %d buffers in total\n",amount);
