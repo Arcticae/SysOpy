@@ -70,10 +70,11 @@ int handle_oneliner(char*line){
         }else{
             if(i<executables-1)close(file_descriptors[i][1]);  //closing the unused write end last needs to print to stdout the result
             if(i>0)close(file_descriptors[i-1][0]);    //previous in pipe needs to be closed
+            wait(NULL);
         }
 
     }
-    wait(NULL);
+
 
     return 0;
 
@@ -95,23 +96,15 @@ int main(int argc, char**argv){
     }
     char line[maxline_len];
 
-    while(fgets(line,maxline_len,batch_file)!=NULL){
-        fprintf(stderr,"\tDEBUG: %s PID: %d\n",line,getpid());
-        int status=0;
-        pid_t pid;
-        pid=fork();
+    while(fgets(line,maxline_len,batch_file)){
+        fprintf(stderr,"\t%s\n",line);
 
-        if(pid==0){
+
+
             handle_oneliner(line);      //execution
-            exit(EXIT_SUCCESS);
-        }
-        sleep(1);
-        wait(&status);
-        if(status){
-            printf("Error!\nLine %s cannot be executed!\n",line);
-            perror(NULL);
-            return -1;
-        }
+
+
+
 
     }
 
