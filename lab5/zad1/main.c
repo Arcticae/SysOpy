@@ -27,15 +27,14 @@ char**get_args(char*line){
 
 }
 int handle_oneliner(char*line){
-        //0 is read part and 1 is write part
+
     char*arguments[max_argnum];
-    int executables=0,i=0;
+    int executables=0,i=0,status;
     pid_t pid;
-    int stat;
 
     while((arguments[executables]=strtok(executables == 0 ? line : NULL,"|"))!=NULL)executables++;
+    int file_descriptors[executables][2];       //storing pipes
 
-    int file_descriptors[executables][2];
     for(i=0;i<executables;i++){
 
 
@@ -56,7 +55,7 @@ int handle_oneliner(char*line){
                 }
             }
             if(i>0){
-                close(file_descriptors[i][0]);
+
                 if(dup2(file_descriptors[i-1][0],STDIN_FILENO)==-1) {
                         fprintf(stderr,"Error while doing the stuff with dup2 (IN)%d!",i);
                         exit(EXIT_FAILURE);
@@ -68,19 +67,19 @@ int handle_oneliner(char*line){
                 char**line_args=get_args(arguments[i]);
                 execvp(line_args[0],line_args);
                 perror("Piped task has encountered an error!");
-                exit(EXIT_FAILURE);
+                exit(EXIT_SUCCESS);
 
        }else{
-
-            if(i<executables-1)close(file_descriptors[i][1]);  //last needs to print to stdout the result
-            if(i>0)close(file_descriptors[i-1][0]);    //previous stdin pipe needs to be closed
-
+            if(i<executables-1)close(file_descriptors[i][1]);  //closing the unused write end last needs to print to stdout the result
+            if(i>0)close(file_descriptors[i-1][0]);    //previous in pipe needs to be closed
         }
 
     }
         wait(NULL);
+
         return 0;
-    }
+
+}
 
 
 int main(int argc, char**argv){
@@ -101,18 +100,20 @@ int main(int argc, char**argv){
 
     while(fgets(line,maxline_len,batch_file)){
 
+
         if((pid=fork())==0){
             handle_oneliner(line);      //execution
-            exit(status);
+
+            exit(EXIT_SUCCESS);
         }
 
         wait(&status);
-
-        if(status!=0){
+        if(status){
             printf("Error!\nLine %s cannot be executed!\n",line);
             perror(NULL);
             return -1;
         }
+        exit(EXIT_SUCCESS);
     }
 
     fclose(batch_file);
