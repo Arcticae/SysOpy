@@ -1,94 +1,65 @@
-
-#define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-#include <sys/wait.h>
+#include <stdlib.h>
+#include <stdio.h>
 
+    int child_received=0;
+    int parent_sent=0;
+    int child_resent=0;
+    int child_terminated=0;
 
-volatile int sigs_sent = 0;
-volatile int child_sigs_received = 0;
-volatile int parent_sigs_received = 0;
+    pid_t child_pid;
+    pid_t parent_pid;
 
-
-pid_t child_pid;
-
-void signal_handler(int signum, siginfo_t *info, void *context) {
-    if (signum == SIGINT) {
-        printf("Parent: I have received interrupt!!!! I have to kill my child :( \n");
-        kill(child_pid, SIGUSR2);
-        exit(EXIT_FAILURE);
-    }
-    if ((signum == SIGUSR1 || signum == SIGRTMIN) && info->si_pid == child_pid) {
-        parent_sigs_received++;
-        printf("Parent: Received pingback from child Child\n");
-    }
+void parent_s1_handle(int sig){
+    printf("Parent: Received signal no. %d  number %d\n",sig,++child_resent);
 }
 
-void sendsigs(int type,pid_t child_pid,int sigcount) {
-
-    sleep(1);
-    int i;
-
-    struct sigaction action;
-    sigemptyset(&action.sa_mask);
-    action.sa_flags = SA_SIGINFO;
-    action.sa_sigaction = signal_handler;
-
-    if (sigaction(SIGINT, &action, NULL)!=0){
-        printf("There was a problem whilst setting sig action\n");
-    }
-
-    if (type == 1 || type == 2){
-
-        if (sigaction(SIGUSR1, &action, NULL)!=0){
-            printf("There was a problem whilst setting sig action\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-    if (type == 3) {
-        if (sigaction(SIGRTMIN, &action, NULL)!=0){
-            printf("There was a problem whilst setting sig action\n");
-        }
-    }
-
-    if (type == 1 || type == 2) {
-
-        sigset_t mask;          //used for ignoring other sigs in type 2
-        sigfillset(&mask);
-        sigdelset(&mask, SIGUSR1);
-        sigdelset(&mask, SIGINT);
-
-        for(i=0;i<sigcount;i++){
-            printf("Parent: Pinging the child with SIGUSR1\n");
-            kill(child_pid, SIGUSR1);
-            if(type == 2)sigsuspend(&mask);       //here we wait for response if mode==2
-            sigs_sent++;
-        }
-        printf("Parent: All signals sent. Pinging the child with SIGUSR2 (terminate)...\n");
-        kill(child_pid, SIGUSR2);
-    }
-    if (type == 3) {
-        for(i=0;i<sigcount;i++){
-            printf("Parent: Pinging the child with realtime signals\n");
-            kill(child_pid, SIGRTMIN);
-            sigs_sent++;
-        }
-        sigs_sent++;
-        printf("Parent: Sending Terminate signal\n");
-        kill(child_pid, SIGRTMAX);
-    }
-
-    int status;
-    waitpid(&status,&status,0);
-    if (WIFEXITED(status)) child_sigs_received = WEXITSTATUS(status);
-    else printf("Child had a problem whilst closing\n");
+void parent_s2_handle(int sig, siginfo_t *info, void *ucontext) {
+    child_received = info->si_value.sival_int;
+    child_terminated = 1;
 }
 
+void child_s1_handle(int sig){
+    printf("Child: Received signal no. %d  number %d\n",sig,++child_received);
+    kill(parent_pid, sig);
+}
 
-int main(int argc, char**argv) {
+void child_s2_handle(int sig){
+    printf("Received sig no :%d in child process\nTerminating child...\n",sig);
+    union sigval received_value;
+    received_value.sival_int = child_received;
+    sigqueue(parent_pid, sig, received_value);
+    exit(EXIT_SUCCESS);
+}
 
+void child_prog(int sig1, int sig2){
+
+    parent_pid= getppid();
+
+    sigset_t set;
+    sigfillset(&set);
+    sigdelset(&set, sig1);
+    sigdelset(&set, sig2);
+    sigprocmask(SIG_SETMASK, &set, NULL);
+
+    struct sigaction child_act_s1;
+    child_act_s1.sa_handler = child_s1_handle;
+    sigemptyset(&child_act_s1.sa_mask);
+    sigaddset(&child_act_s1.sa_mask, sig2);
+    child_act_s1.sa_flags = 0;
+    sigaction(sig1, &child_act_s1, NULL);
+
+    struct sigaction child_act_s2;
+    child_act_s2.sa_handler = child_s2_handle;
+    sigemptyset(&child_act_s2.sa_mask);
+    child_act_s2.sa_flags = 0;
+    sigaction(sig2, &child_act_s2, NULL);
+
+    while(1){sleep(1);};
+}
+
+int main(int argc, char **argv){
     if (argc < 3) {
         printf("You must give me 2 arguments - how many sigs you want to send and mode of sending\n");
         exit(EXIT_FAILURE);
@@ -96,24 +67,47 @@ int main(int argc, char**argv) {
 
     int sigcount= (int)strtol(argv[1],NULL,10);
     int type= (int)strtol(argv[2],NULL,10);
+    int sig1,sig2;
 
     if(type < 1 || type > 3 || sigcount < 1) {
         printf("Please give me proper argument format for the love of god.\n");
         exit(EXIT_FAILURE);
     }
-
-    printf("Parent: Sigcount: %d Type: %d\n",sigcount,type);
-    if((child_pid= fork()) == 0){
-        execl("./zad3_child","./zad3_child",argv[2]);
-        exit(EXIT_FAILURE);
+    if(type==3){
+        sig1=SIGRTMIN;
+        sig2=SIGRTMAX;
+    }else{
+        sig1=SIGUSR1;
+        sig2=SIGUSR2;
     }
-    else if (child_pid>0) {
-        sendsigs(type,child_pid,sigcount);
+
+    struct sigaction sigaction1;
+    sigaction1.sa_handler = parent_s1_handle;
+    sigemptyset(&sigaction1.sa_mask);
+    sigaction1.sa_flags = 0;
+    sigaction(sig1, &sigaction1, NULL);
+
+
+    struct sigaction sigaction2;
+    sigaction2.sa_sigaction = parent_s2_handle;
+    sigemptyset(&sigaction2.sa_mask);
+    sigaction2.sa_flags = SA_SIGINFO;
+    sigaction(sig2, &sigaction2, NULL);
+
+    child_pid = fork();
+    if(child_pid == 0)child_prog(sig1, sig2);//execute
+    sleep(3);
+    for(int i = 0; i < sigcount; i++) {
+        if(kill(child_pid, sig1)==0)printf("Parent: Sent signal of number %d and count %d to child\n",sig1,++parent_sent);
+        else fprintf(stderr,"Parent: Could not send signal of number %d %d\n",sig1, ++parent_sent);
+        if(type == 2) while(parent_sent !=child_resent) {};        //wait for sent to be equal to received
     }
-    else fprintf(stderr,"Forking went wrong... .\n");
 
-    printf("\nParent: signals sent: %d.\n", sigs_sent);
-    printf("Parent: signals received from child: %d.\n", parent_sigs_received);
+    if(kill(child_pid, sig2)==0)printf("Sent signal TERMINATE of number %d to child \n",sig2);
+    else fprintf(stderr,"Could not send signal TERMINATE of number %d to child \n",sig2);
 
-    return 0;
+    while(child_terminated!=1) {sleep(1);}
+    sleep(1);
+    fprintf(stderr,"Child has received %d total sigs\nParent has sent %d total sigs\n Child has resent %d total sigs\n",child_received,parent_sent,child_resent);
+        //check for sigprocmask, and masks in general. Above may be printed off in sigchld
 }
