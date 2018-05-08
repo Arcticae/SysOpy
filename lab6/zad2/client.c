@@ -26,35 +26,28 @@ int mother;
 ssize_t ercode;
 
 void handle_interrupt(int sig) {
+	exit_procedure();
     printf("I have received signal SIGINT, terminating...\n");
     exit(0);
 }
 
 void receive_message(mqd_t queue_id, struct msgbuffer_new *message) {
-    do {
-        ercode = mq_receive(queue_id, (char *) message, MESSAGE_SIZE, 0);
-        if (ercode == -1 && errno != EAGAIN) {
-            perror("Error while getting response from client");
-        }
-    } while (ercode == -1);
+    
+        mq_receive(queue_id, (char *) message, MESSAGE_SIZE, 0);
+        
 
 }
 
 void send_message(mqd_t queue_id, struct msgbuffer_new *message) {
-    do {
         ercode = mq_send(queue_id, (char *) message, MESSAGE_SIZE, 0);
-        if (ercode == -1 && errno != EAGAIN) {
-            perror("Error while sending off response to client");
-            exit(EXIT_FAILURE);
-        }
-    } while (ercode == -1);
+            
 }
 
 void exit_procedure() {
 
 
     mq_close(client_queue);        //remove queue
-
+	mq_unlink(client_queue);
     if (mother == 1) {      //we need only to say goodbye when we know mother is alive.
 
         struct msgbuffer_new exit_message;
@@ -82,14 +75,14 @@ void start_client() {
     sprintf(queuepath, "/%d", getpid());
 
 
-    server_queue = mq_open(SRV_DIRECTORY, O_WRONLY | O_NONBLOCK);
+    server_queue = mq_open(SRV_DIRECTORY, O_WRONLY );
 
     if (server_queue == -1) {
         perror("Error while opening queue for srv");
         exit(EXIT_FAILURE);
     }
 
-    client_queue = mq_open(queuepath, O_RDONLY | O_CREAT | O_EXCL | O_NONBLOCK, S_IRWXU | S_IRWXG,
+    client_queue = mq_open(queuepath, O_RDONLY | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG,
                            &queue_attributes);
 
     if (client_queue == -1) {

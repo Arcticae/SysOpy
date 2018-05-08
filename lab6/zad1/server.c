@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
         struct msgbuffer_new message;
         struct msgbuffer_new response;
 
-        if (msgrcv(server_qid, &message, MESSAGE_SIZE, 0, IPC_NOWAIT) ==
+        if (msgrcv(server_qid, &message, MESSAGE_SIZE, 0, 0) ==
             -1) {      //we do not wait for the communicate, because we have infinite loop
             if (errno != ENOMSG) {
                 perror("Error while fetching message from srv queue");
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 
         } else {
             printf("I have received taskwith args: %s\tid:%d\topcode:%lo\n", message.message, message.index,
-                   message.mtype);
+               message.mtype);
 
             switch (message.mtype) {
                 case INTRODUCE:
@@ -134,10 +134,11 @@ int main(int argc, char **argv) {
             }
             //respond after doing stuff
             response.mtype = message.mtype;
-            if (msgsnd(client_qids[message.index], &response, MESSAGE_SIZE, 0) == -1) {
+            if (msgsnd(client_qids[response.index], &response, MESSAGE_SIZE, 0) == -1) 				{
                 perror("Error while sending off response to client");
                 exit(EXIT_FAILURE);
             }
+                      
         }
 
     }

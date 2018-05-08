@@ -1,7 +1,7 @@
 //
 // Created by timelock on 25.04.18.
+#define _XOPEN_SOURCE
 //
-
 #include <stdio.h>
 #include <sys/msg.h>
 #include <sys/ipc.h>

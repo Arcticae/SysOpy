@@ -24,6 +24,7 @@ ssize_t ercode;
 int current_clients = 0;
 
 void handle_interrupt(int sig) {
+	exit_procedure();
     exit(0);
 }
 
@@ -48,7 +49,7 @@ void start_server() {
     server_attributes.mq_msgsize = MESSAGE_SIZE;
     server_attributes.mq_maxmsg = 10;
 
-    server_queue = mq_open(SRV_DIRECTORY, O_RDONLY | O_CREAT | O_EXCL | O_NONBLOCK, S_IRWXU | S_IRWXG,
+    server_queue = mq_open(SRV_DIRECTORY, O_RDONLY | O_CREAT | O_EXCL , S_IRWXU | S_IRWXG,
                            &server_attributes);
     if (server_queue == -1) {
         perror("Error creating queue 4 serv");
@@ -57,13 +58,8 @@ void start_server() {
 }
 
 void send_message(mqd_t queue_id, struct msgbuffer_new *message) {
-    do {
-        ercode = mq_send(queue_id, (char *) message, MESSAGE_SIZE, 0);
-        if (ercode == -1 && errno != EAGAIN) {
-            perror("Error while sending off response to client");
-            exit(EXIT_FAILURE);
-        }
-    } while (ercode == -1);
+    mq_send(queue_id, (char *) message, MESSAGE_SIZE, 0);
+    
 }
 
 
@@ -132,7 +128,7 @@ int main(int argc, char **argv) {
             }
             //respond after doing stuff
             response.mtype = message.mtype;
-            send_message(client_queues[message.index],&response);
+            send_message(client_queues[response.index],&response);
         }
 
     }
@@ -142,7 +138,7 @@ int main(int argc, char **argv) {
 void handle_INTRODUCE(struct msgbuffer_new *message, struct msgbuffer_new *response) {
     if (current_clients < MAX_CLIENTS) {
 
-        client_queues[current_clients] = mq_open(message->message, O_WRONLY | O_NONBLOCK);
+        client_queues[current_clients] = mq_open(message->message, O_WRONLY);
 
         if (client_queues[current_clients] == -1) {
             perror("Cannot get client's queue");
