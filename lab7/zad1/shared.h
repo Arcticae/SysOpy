@@ -24,7 +24,7 @@
 #define AWAKE 0
 #define QUEUE 1
 #define CHECK 2
-#define SOMETHING 3
+#define CHAIR 3
 
 typedef struct my_queue{
     int max_size;

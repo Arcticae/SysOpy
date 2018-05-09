@@ -116,7 +116,7 @@ void run_golibroda() {
             perror("Taking AWAKE semaphore not succesful");
             exit(EXIT_FAILURE);
         }
-
+        printf("Timestamp: %ld | Golibroda: I have been awaken!\n", get_time());
         pid_t next_customer = check_client(&action);
         one_cut(next_customer);
 

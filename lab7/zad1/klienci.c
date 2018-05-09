@@ -147,7 +147,7 @@ void launch_child(){
         //fprintf(stderr,"AFTER WAIT\n");
 
         if(done==1){
-            printf("Timestamp: %ld | Client %d has received a cut from barber\n",get_time(),getpid());
+            printf("Timestamp: %ld | Client %d is leaving the barbershop\n",get_time(),getpid());
             fflush(stdout);
         }
         //while(received!=1)wait(NULL);
