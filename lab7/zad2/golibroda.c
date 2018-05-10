@@ -18,8 +18,8 @@ void exit_procedure() {
         sem_close(CHECK) == -1 || sem_unlink(check_sem_path) == -1 ||
         munmap(clients, sizeof(clients)) == -1 ||
         shm_unlink(clients_mem_path) == -1
-            ) {
-        perror("Closing resources failed");
+    ){
+        perror("Golibroda: Closing resources failed");
         exit(EXIT_FAILURE);
     }
 
@@ -140,7 +140,11 @@ void run_golibroda() {
 
     }
 }
-
+sigint_handle(int signum){
+    //exit_procedure();
+    exit(EXIT_FAILURE);
+    return 0;
+}
 int main(int argc, char **argv) {
 
     if (argc < 4) {
@@ -156,7 +160,8 @@ int main(int argc, char **argv) {
     }
 
     atexit(exit_procedure);
-
+    signal(SIGINT,sigint_handle);
+    signal(SIGTSTP,sigint_handle);
     setup_queue();
     setup_sems();
     pid_t proc = fork();
@@ -170,6 +175,9 @@ int main(int argc, char **argv) {
         exit(EXIT_SUCCESS);
     } else execvp("./klienci", argv);
 
+    while(1){
+
+    }
     return 0;
 }
 

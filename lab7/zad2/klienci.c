@@ -37,6 +37,8 @@ void exit_procedure() {
         perror("Closing sems not succesful");
         exit(EXIT_FAILURE);
     }
+    printf("Timestamp: %ld | Client manager: Closed semaphores and detached mapped memory\n");
+    fflush(stdout);
 
 }
 
