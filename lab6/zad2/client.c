@@ -20,6 +20,8 @@
 
 mqd_t server_queue;
 mqd_t client_queue;
+char*client_queue_name;
+char server_queue_name;
 int client_index;
 int sent = 0;
 int mother;
@@ -47,7 +49,8 @@ void exit_procedure() {
 
 
     mq_close(client_queue);        //remove queue
-	mq_unlink(client_queue);
+	mq_unlink(client_queue_name);
+
     if (mother == 1) {      //we need only to say goodbye when we know mother is alive.
 
         struct msgbuffer_new exit_message;
@@ -73,6 +76,7 @@ void start_client() {
 
     char queuepath[PATH_MAX] = {};
     sprintf(queuepath, "/%d", getpid());
+    client_queue_name=queuepath;
 
 
     server_queue = mq_open(SRV_DIRECTORY, O_WRONLY );

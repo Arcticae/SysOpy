@@ -24,7 +24,6 @@ ssize_t ercode;
 int current_clients = 0;
 
 void handle_interrupt(int sig) {
-	exit_procedure();
     exit(0);
 }
 
@@ -49,8 +48,8 @@ void start_server() {
     server_attributes.mq_msgsize = MESSAGE_SIZE;
     server_attributes.mq_maxmsg = 10;
 
-    server_queue = mq_open(SRV_DIRECTORY, O_RDONLY | O_CREAT | O_EXCL , S_IRWXU | S_IRWXG,
-                           &server_attributes);
+    server_queue = mq_open(SRV_DIRECTORY, O_RDONLY | O_CREAT | O_EXCL , S_IRWXU | S_IRWXG, &server_attributes);
+
     if (server_queue == -1) {
         perror("Error creating queue 4 serv");
         exit(EXIT_FAILURE);
@@ -77,7 +76,6 @@ void remove_client(struct msgbuffer_new *message, struct msgbuffer_new *response
 int main(int argc, char **argv) {
 
     start_server();
-
     while (1) {
         struct msgbuffer_new message;
         struct msgbuffer_new response;
