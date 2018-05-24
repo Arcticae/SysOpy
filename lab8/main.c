@@ -4,6 +4,8 @@
 #include <math.h>
 #include <string.h>
 #include <sys/time.h>
+#include <unistd.h>
+#include <wait.h>
 
 #define MAX_LINE 256
 #define MAX_WIDTH 4096
@@ -55,7 +57,7 @@ void parse_file(char *input_path) {
 
     printf("Width: %d\nHeight: %d\nPGM_max: %d\n", PGM_width, PGM_height, PGM_max);
 
-    int i,j;
+    int i, j;
     for (i = 0; i < PGM_height; i++)
         for (j = 0; j < PGM_width; j++) {
             fscanf(input, "%s", buffer);
@@ -79,7 +81,7 @@ void parse_filter(char *path) {
     filter_size = (int) strtol(buffer, NULL, 10);
     if (filter_size < 1.0 || filter_size > MAX_FILTER)
         failure("Not correct filter size");
-    int i,j;
+    int i, j;
 
     for (i = 0; i < filter_size; i++)
         for (j = 0; j < filter_size; j++) {
@@ -88,18 +90,19 @@ void parse_filter(char *path) {
             if (filter[i][j] > 1.0 || filter[i][j] < 0.0)
                 failure("Not correct format of one pxl:");
         }
+    printf("Filter size: %d\n", filter_size);
     fclose(filter_file);
 }
 
 void process_pixel(int *pxl, int x, int y) {
     double filtered = 0.0;
     int tmp;
-    int i,j;
+    int i, j;
     for (i = 0; i < filter_size; i++)
         for (j = 0; j < filter_size; j++) {
             filtered += (PGM[1 > (tmp = (int) (x - ceil((double) filter_size / 2.0) + i)) ? 1 : tmp]
-                        [1 > (tmp = (int) (y - ceil((double) filter_size / 2.0) + j)) ? 1 : tmp]
-                        )* filter[i][j];
+            [1 > (tmp = (int) (y - ceil((double) filter_size / 2.0) + j)) ? 1 : tmp]
+                        ) * filter[i][j];
         }
     filtered = round(filtered);
     *pxl = (int) filtered;
@@ -120,49 +123,58 @@ void *thread_task(void *args) {
 }
 
 void save_progress(FILE *out) {
-    int i,j;
+    int i, j;
     fprintf(out, "P2\n");
     fprintf(out, "%d %d\n", PGM_width, PGM_height);
     fprintf(out, "%d\n", PGM_max);
     for (i = 0; i < PGM_width; i++) {
-        for (j = 0; j < PGM_height; j++){
-            fprintf(out,"%d ",PGM_out[i][j]);
+        for (j = 0; j < PGM_height; j++) {
+            fprintf(out, "%d ", PGM_out[i][j]);
         }
-        fprintf(out,"\n");
+        fprintf(out, "\n");
     }
 }
 
-void measure_times(struct timeval *start_time){
+void measure_times(struct timeval *start_time) {
     struct timeval stop_time;
-    gettimeofday(&stop_time,NULL);
-    FILE* results=fopen("./measurements","w");
-    timersub(&stop_time,start_time,&stop_time);
-    fprintf(results,"Test Results: \nTime of execution: %ld.%ldsec\nThread number: %d \nFilter size: %d\nImage resolution: %dx%d\n\n",stop_time.tv_sec,stop_time.tv_usec,thread_amount,filter_size,PGM_width,PGM_height);
+    gettimeofday(&stop_time, NULL);
+    FILE *results = fopen("./measurements", "a");
+    timersub(&stop_time, start_time, &stop_time);
+    fprintf(results,
+            "Test Results: \nTime of execution: %ld.%ldsec\nThread number: %d \nFilter size: %d\nImage resolution: %dx%d\n\n",
+            stop_time.tv_sec, stop_time.tv_usec, thread_amount, filter_size, PGM_width, PGM_height);
     fclose(results);
 
 }
 
 int main(int argc, char **argv) {
-
-    if (argc < 4) {
-        printf("Give me enough args: thread amount, input file path, filter path, output path.\n");
+    if (argc < 5) {
+        printf("Give me enough args: thread amount, input file path, filter path, filter size and  output path.\n");
     }
+
+    if (fork() == 0) {
+        execl(realpath("./filter_generator", NULL), "filter_generator", "./filter", argv[4], NULL);
+        failure("Executing not succ");
+    }
+    int result_gen = 0;
+    wait(&result_gen);
+
     thread_amount = (int) strtol(argv[1], NULL, 10);
     int i;
     parse_file(argv[2]);
     parse_filter(argv[3]);
-    FILE*output = fopen(argv[4], "w+");
+    FILE *output = fopen(argv[5], "w+");
 
     struct thread_wrapper threads_inf[thread_amount];
     struct timeval start_time;
 
-    gettimeofday(&start_time,NULL);
+    gettimeofday(&start_time, NULL);
     for (i = 0; i < thread_amount; i++) {
         threads_inf[i].row = i;
         pthread_create(&threads_inf[i].thread_id, NULL, thread_task, (void *) &threads_inf[i]);
     }
 
-    for (i = 0; i < thread_amount; i++){
+    for (i = 0; i < thread_amount; i++) {
         pthread_join(threads_inf[i].thread_id, NULL);
 
     }
