@@ -1,198 +1,118 @@
 #include <signal.h>
 #include "shared.h"
 
-my_queue *clients = NULL;
 unsigned max_clients;
 
 int semgroup_id;
 int shared_memory_id;
 
-key_t queue_key;
-
+void sig_handle(int sig) {
+    printf("Golibroda exiting...\n");
+    fflush(stdout);
+    exit(0);
+}
 
 void exit_procedure() {
-    if (shmdt(clients) == -1) {
-        perror("Detaching mem not succesful");
-        exit(EXIT_FAILURE);
-    }
-    if (shmctl(shared_memory_id, IPC_RMID, NULL) == -1) {
-        perror("Removeing ipc from memory not succ");
-        exit(EXIT_FAILURE);
-    }
-    if (semctl(semgroup_id, 0, IPC_RMID) == -1) {
-        perror("Rmving sms not succ");
-        exit(EXIT_FAILURE);
-    }
-    printf("Timestamp: %ld | Golibroda: Detaching all resources complete.\n", get_time());
-    fflush(stdout);
+    semctl(semgroup_id,0,IPC_RMID);
+    shmctl(shared_memory_id,IPC_RMID,NULL);
 }
 
-void setup_queue() {
+void setup_golibroda() {
 
-    shared_memory_id = shmget(queue_key, sizeof(my_queue), IPC_CREAT | 0666);
+    signal(SIGKILL, sig_handle);
+    signal(SIGTERM, sig_handle);
+    signal(SIGTSTP, sig_handle);
+    atexit(exit_procedure);
+    key_t shared_key = ftok(getenv("HOME"), QUEUE_KEY);
+    if (shared_key == -1) {
+        perror("Getting ftok was unsuccsesful");
+        exit(EXIT_FAILURE);
+    }
+
+    shared_memory_id = shmget(shared_key, sizeof(struct barber_info), S_IRWXU | IPC_CREAT);
+
     if (shared_memory_id == -1) {
-        perror("Shared memory creation failed");
+        perror("Getting shmid was unsuccsesful");
+        exit(EXIT_FAILURE);
+    }
+    barber = shmat(shared_memory_id, 0, 0);
+    if (barber == (void *) -1) {
+        perror("Cannot access shm");
         exit(EXIT_FAILURE);
     }
 
-    clients = (my_queue *) shmat(shared_memory_id, NULL, 0);
-
-    if (clients == (my_queue *) -1) {
-        perror("Attaching shared mem to address space of process has failed, reason");
-        exit(EXIT_FAILURE);
-    }
-
-    initialize_queue(clients, max_clients);
-}
-
-void setup_sems() {
-
-    semgroup_id = semget(queue_key, 4, IPC_CREAT | 0666);
-
-    if (semgroup_id == -1) {
-        perror("Getting semaphores failed, reason");
+    if ((semgroup_id = semget(shared_key, 1, S_IRWXU | IPC_CREAT)) == -1) {
+        perror("Cannot get sems");
         exit(EXIT_FAILURE);
     }
 
     int i;
-
-
-    for (i = 1; i < 3; i++) {
-
-        if (semctl(semgroup_id, i, SETVAL, 1) == -1) {
-            perror("Setting value for a semaphore has failed, reason");
-            exit(EXIT_FAILURE);
-        }
-
-    }
-
-    if (semctl(semgroup_id, 0, SETVAL, 0) == -1) {
-        perror("Setting value for a semaphore has failed, reason");
-        exit(EXIT_FAILURE);
-    }
-
+    semctl(semgroup_id,0,SETVAL,0);
+    barber->barber_status=SLEEPING;
+    barber->clients=0;
+    barber->chair=0;
+    barber->queue_size=max_clients;
+    for(i=0;i<barber->queue_size;i++)barber->fifo_queue[i]=0;
 }
 
-pid_t check_client(struct sembuf *action) {
-    action->sem_num = QUEUE;
-    action->sem_op = -1;
-
-    if (semop(semgroup_id, action, 1) == -1) {
-        perror("Taking QUEUE semaphore not succesful");
-        exit(EXIT_FAILURE);
-    }
-
-    pid_t client_no = clients->chair;
-
-    action->sem_op = 1;
-
-    if (semop(semgroup_id, action, 1) == -1) {
-        perror("Giving QUEUE semaphore not succesful");
-        exit(EXIT_FAILURE);
-    }
-
-    return client_no;
-}
-
-void one_cut(pid_t pid) {
-    printf("Timestamp: %ld | Golibroda: Before one cut of client no:%d\n", get_time(), pid);
+void shave(){
+    printf("Timestamp: %ld | Golibroda started cutting of cli no: %d\n", get_time(), barber->chair);
     fflush(stdout);
+    printf("Timestamp: %ld | Golibroda finished cutting of cli no: %d\n", get_time(), barber->chair);
+    fflush(stdout);
+    barber->chair=0;
+}
 
-   // kill(pid, SIGRTMIN);
-
-    printf("Timestamp: %ld | Golibroda: After one cut of client no:%d\n", get_time(), pid);
+void invite_client(){
+    barber->chair=barber->fifo_queue[0];
+    printf("Timestamp: %ld | Golibroda invited cli no: %d\n", get_time(), barber->chair);
     fflush(stdout);
 }
 
-void run_golibroda() {
-    struct sembuf action;
-    action.sem_flg = 0;
 
-    while (1) {
-        action.sem_op = -1;
-        action.sem_num = AWAKE;
-
-        if (semop(semgroup_id, &action, 1) == -1) {
-            perror("Taking AWAKE semaphore not succesful");
-            exit(EXIT_FAILURE);
-        }
-        printf("Timestamp: %ld | Golibroda: I have been awaken!\n", get_time());
-        pid_t next_customer = check_client(&action);
-        one_cut(next_customer);
-
-        while (1) {
-            action.sem_op = -1;
-            action.sem_num = QUEUE;
-
-            if (semop(semgroup_id, &action, 1) == -1) {
-                perror("Taking QUEUE semaphore not succesful");
-                exit(EXIT_FAILURE);
-            }
-
-            next_customer = queue_pop(clients);
-
-            if (next_customer != -1) {      //if queue is not empty. continue cutting.
-                action.sem_op = 1;
-
-                if (semop(semgroup_id, &action, 1) == -1) {
-                    perror("Giving QUEUE semaphore not succesful");
-                    exit(EXIT_FAILURE);
-                }
-                printf("Timestamp: %ld | Golibroda: Inviting customer %d to be seated\n", get_time(),next_customer);
-                one_cut(next_customer);
-
-            } else {                     //else fall asleep and give semaphore
-                printf("Timestamp: %ld | Golibroda: Falling asleep\n", get_time());
-                fflush(stdout);
-                action.sem_op = -1;
-                action.sem_num = AWAKE;
-                if (semop(semgroup_id, &action, 1) == -1) {
-                    perror("Taking AWAKE semaphore not succesful");
-                    exit(EXIT_FAILURE);
-                }
-
-                action.sem_op = 1;
-                action.sem_num = QUEUE;
-                if (semop(semgroup_id, &action, 1) == -1) {
-                    perror("Giving QUEUE semaphore not succesful");
-                    exit(EXIT_FAILURE);
-                }
-                break;
-            }
-        }
-
-    }
-}
 
 int main(int argc, char **argv) {
 
-    if (argc < 4) {
-        printf("Specify the queue capacity,wanted nubmer of clis, and cuts of a client in args plz\n");
+    if (argc < 2) {
+        printf("Specify the queue capacity\n");
         exit(EXIT_FAILURE);
     }
-
     max_clients = (unsigned) strtol(argv[1], NULL, 10);
-
     if (max_clients < 1 || max_clients > MAXQUEUE_SIZE) {
         printf("Wrong arg. Try agian\n");
         exit(EXIT_FAILURE);
     }
 
-    queue_key = QUEUE_KEY;
+    setup_golibroda();
+    give_semaphore(semgroup_id);
 
-    atexit(exit_procedure);
-
-    setup_queue();
-    setup_sems();
-    pid_t proc=fork();
-    if(proc!=0){
-        printf("Golibroda PID: %d\n",getpid());
-        printf("Timestamp: %ld | Golibroda: Initializing queue and sems complete. Golibroda is now asleep\n", get_time());
-        fflush(stdout);
-        run_golibroda();
-        exit(EXIT_SUCCESS);
+    while(1){
+        take_semaphore(semgroup_id);
+        switch(barber->barber_status){
+            case IDLE:
+                if(queue_empty()){
+                    printf("Timestamp: %ld | Golibroda fell asleep\n", get_time());
+                    fflush(stdout);
+                    barber->barber_status=SLEEPING;
+                }else{
+                    invite_client();
+                    barber->barber_status=READY;
+                }
+                break;
+            case AWAKEN:
+                printf("Timestamp: %ld | Golibroda has awaken\n", get_time());
+                fflush(stdout);
+                barber->barber_status=READY;
+                break;
+            case SHAVING:
+                shave();
+                barber->barber_status=READY;
+                break;
+            default:
+                break;
+        }
+        give_semaphore(semgroup_id);
     }
-    else execvp("./klienci",argv);
 
     return 0;
 }

@@ -7,42 +7,52 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-#include <errno.h>
-#include <unistd.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
-#include <ctype.h>
 #include <time.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/mman.h>
-#include <semaphore.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <sys/wait.h>
+#include <sys/sem.h>
+#include <sys/shm.h>
+#include <sys/ipc.h>
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
+#include <signal.h>
+#include <semaphore.h>
+#include <unistd.h>
 
-#define MAXQUEUE_SIZE 2048
+#define MAXQUEUE_SIZE 1024
+#define keypath "/golibroda"
+enum barber_status {
+    SLEEPING,
+    AWAKEN,
+    READY,
+    IDLE,
+    SHAVING
+};
 
+enum client_status {
+    ARRIVED,
+    INVITED,
+    SHAVED
+};
 
-
-typedef struct my_queue{
-    int max_size;
-    int head;
-    int tail;
-    pid_t queue[MAXQUEUE_SIZE];
+struct barber_info {
+    enum barber_status barber_status;
+    int clients;
+    int queue_size;
     pid_t chair;
+    pid_t fifo_queue[MAXQUEUE_SIZE];
+} *barber;
 
-}my_queue;
 
 __syscall_slong_t get_time();
-void initialize_queue(my_queue *queue, unsigned size);
-int is_empty(my_queue *queue);
-int is_full(my_queue *queue);
-pid_t queue_pop(my_queue *queue);
-int queue_push(my_queue *queue, pid_t client);
-
+void take_semaphore(sem_t *sem_ptr);
+void give_semaphore(sem_t *sem_ptr);
+int queue_full();
+int queue_empty();
+void queue_push(int pid);
+void queue_pop();
 
 
 #endif //LAB7_SHARED_H
