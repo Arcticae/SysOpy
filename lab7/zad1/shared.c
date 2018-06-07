@@ -34,7 +34,7 @@ void give_semaphore(int sem_id){
 }
 
 int queue_full(){
-    if(barber->clients<barber->queue_size)return 0;
+    if(barber->clients < barber->queue_size)return 0;
     else return 1;
 }
 

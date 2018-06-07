@@ -85,17 +85,17 @@ void launch_child() {        //DONE
         } else if (!queue_full()) {
             queue_push(my_pid);
             printf("Timestamp: %ld | Client no: %d has entered the queue\n", get_time(), my_pid);
-            queue_contains();
+            //queue_contains();
             fflush(stdout);
 
         } else {
-            printf("Timestamp: %ld | Client no: %d could not enter the queue as it's full, i got: %d cuts \n",
-                   get_time(), my_pid, cuts);
+            printf("Timestamp: %ld | Client no: %d could not enter the queue as it's full\n",
+                   get_time(), my_pid);
           
-            queue_contains();
+           // queue_contains();
             fflush(stdout);
             give_semaphore(sem);
-            return;
+            continue;
         }
 
         give_semaphore(sem);

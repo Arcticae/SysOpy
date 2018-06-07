@@ -96,7 +96,7 @@ void launch_child() {        //DONE
             queue_contains();
             fflush(stdout);
             give_semaphore(sem_group_id);
-            return;
+            continue;
         }
 
         give_semaphore(sem_group_id);
