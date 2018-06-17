@@ -223,6 +223,7 @@ void add_client(int socket, struct sockaddr *sockaddr, socklen_t socklen, messag
             free(sockaddr);
         } else {
             clients[current_clients].sockaddress = sockaddr;
+            printf("Sockadrr:%s\n");
             clients[current_clients].con_type = msg.con_type;
             clients[current_clients].socketlength = socklen;
             clients[current_clients].login = malloc(strlen(msg.login) + 1);

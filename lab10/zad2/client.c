@@ -17,14 +17,18 @@ void failure(const char *communicate) {
 int socket_fd;
 
 char *client_name;
+char*self_unix_path="/socket-self";
 enum connection_type con_type;
 char*unix_path;
 
 
 void tear_down(int sig) {    //also a procedure for ctrl+c
+    if (unlink(self_unix_path) == -1)
+        failure("Deleting self endpoint not succesful");
     send_header(SIGNOUT,0,0);
-    if (close(socket_fd) == -1)
+    if (close(socket_fd) == -1) {
         failure("Removing local socket was not succesful");
+    }
     printf("Shutting down client...\n");
     fflush(stdout);
 }
@@ -69,24 +73,30 @@ void set_up(int addr_family, char *name, char *srv_address) {     //address full
         }
         case AF_UNIX: {
             unix_path=srv_address;
+
             con_type=UNIX;
 
             //srv_address in this case corresponds to pathname
             if (strlen(unix_path) < 1 || strlen(unix_path) > UNIX_PATH_MAX)
                 failure("Correctn't pathlength for afunix");
 
-            struct sockaddr_un local_address;
-            local_address.sun_family = AF_UNIX;
-            snprintf(local_address.sun_path,UNIX_PATH_MAX, "%s", unix_path);
+            struct sockaddr_un server_address;
+            struct sockaddr_un client_address;
+            memset(&server_address,0,sizeof(server_address));
+            memset(&client_address,0,sizeof(client_address));
+            server_address.sun_family = AF_UNIX;
+            client_address.sun_family = AF_UNIX;
+            snprintf(server_address.sun_path,UNIX_PATH_MAX, "%s", unix_path);
+            snprintf(client_address.sun_path,UNIX_PATH_MAX,"%s",self_unix_path);
 
             if ((socket_fd = socket(AF_UNIX, SOCK_DGRAM, 0))<0)
                 failure("Could not create socket");
 
 
-            if(bind(socket_fd,(const struct sockaddr*) &local_address,sizeof(local_address)))
+            if(bind(socket_fd,(const struct sockaddr*) &client_address,sizeof(client_address)))
                 failure("Binding address failed");
 
-            if (connect(socket_fd, &local_address, sizeof(local_address)) == -1) {
+            if(connect(socket_fd,(const struct sockaddr*) &server_address, sizeof(server_address)) == -1) {
                 failure("Connection to server failed");
             }
 
